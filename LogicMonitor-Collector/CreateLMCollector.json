@@ -190,7 +190,7 @@
     },
     {
       "type": "Microsoft.Compute/virtualMachines",
-      "name": "[concat(parameters('ResourcePrefix'), '-lm', copyIndex())]",
+      "name": "[concat(parameters('ResourcePrefix'), '-vm', copyIndex())]",
       "apiVersion": "2017-03-30",
       "location": "[resourceGroup().location]",
       "copy": {
@@ -208,7 +208,7 @@
           "vmSize": "Standard_D1_v2"
         },
         "osProfile": {
-          "computerName": "[concat(parameters('ResourcePrefix'),'_lmcollector', copyIndex())]",
+          "computerName": "[concat(parameters('ResourcePrefix'),'-vm', copyIndex())]",
           "adminUsername": "[parameters('adminUsername')]",
           "adminPassword": "[parameters('adminPassword')]"
         },
