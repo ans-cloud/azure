@@ -1,0 +1,215 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "adminUsername": {
+      "type": "string",
+      "metadata": {
+        "description": "Username for the Virtual Machine."
+      }
+    },
+    "adminPassword": {
+      "type": "securestring",
+      "metadata": {
+        "description": "Password for the Virtual Machine."
+      }
+    },
+    "vmHostname": {
+        "defaultValue": "lm-collector",
+        "type": "string",
+        "metadata": {
+          "description": "VirtualMachine Hostmane."
+        }    
+    },
+    "lmAccessKey": {
+        "type": "securestring",
+        "metadata": {
+          "description": "LogicMonitor Access Key."
+        }    
+    },
+    "lmSecretKey": {
+        "type": "securestring",
+        "metadata": {
+          "description": "LogicMonitor Secret Key."
+        }    
+    },
+    "lmCollectorSize": {
+        "type": "string",
+        "allowedValues": ["small","medium","large"],
+        "defaultValue": "small",
+        "metadata": {
+          "description": "LogicMonitor Collector Size (Small 100 devices, Medium 500 devices, Large 750 devices)."
+        }    
+    },
+    "lmCollectorDesc": {
+        "defaultValue": "LM_Collector",
+        "type": "string",
+        "metadata": {
+          "description": "Collector Description."
+        }   
+    },
+    "lmHost": {
+        "defaultValue": "ans",
+        "type": "string",
+        "allowedValues": ["ans","anstest"],
+        "metadata": {
+          "description": "LogicMonitor Environment"
+        }    
+    },
+    "vNetName": {
+      "defaultValue": "lm-test-vnet",
+      "type": "string",
+      "metadata": {
+        "description": "Enter existing vNet name"
+      }
+    },
+    "SubnetName": {
+      "defaultValue": "lm-test-subnet",
+      "type": "string",
+      "metadata": {
+      "description": "Enter existing SubNet name"
+      }  
+    }
+  },
+  "variables": {
+    "storageAccountName": "[concat(uniquestring(resourceGroup().id), 'salmvm')]",
+    "nicName": "lmVMNic",
+    "publicIPAddressName": "lmPublicIP",
+    "vmName": "[parameters('vmHostname')]",
+    "virtualNetworkName": "[parameters('vNetName')]",
+    "virtualNetworkId": "[resourceId('Microsoft.Network/virtualNetworks', variables('virtualNetworkName'))]",
+    "subnetRef": "[concat(variables('virtualNetworkId'),'/subnets/', parameters('SubnetName'))]",
+    "singleQuote": "'",
+    "scriptLocation": "https://raw.githubusercontent.com/ans-cloud/azure/master/LogicMonitor/CreateLMCollector.ps1",
+    "script": "CreateLMCollector.ps1",
+    "arguments": "[concat('-accessId ', parameters('lmAccessKey'),' -accessKey ', parameters('lmSecretKey'), ' -collectorSize ', parameters('lmCollectorSize'), ' -lmHost ', parameters('lmHost'), ' -lmDescription ', parameters('lmCollectorDesc'))]"
+  },
+  "resources": [
+    {
+      "type": "Microsoft.Storage/storageAccounts",
+      "name": "[variables('storageAccountName')]",
+      "apiVersion": "2016-01-01",
+      "location": "[resourceGroup().location]",
+      "sku": {
+        "name": "Standard_LRS"
+      },
+      "kind": "Storage",
+      "properties": {}
+    },
+    {
+      "apiVersion": "2016-03-30",
+      "type": "Microsoft.Network/publicIPAddresses",
+      "name": "[variables('publicIPAddressName')]",
+      "location": "[resourceGroup().location]",
+      "properties": {
+        "publicIPAllocationMethod": "Dynamic"
+      }
+    },
+    {
+      "apiVersion": "2016-03-30",
+      "type": "Microsoft.Network/networkInterfaces",
+      "name": "[variables('nicName')]",
+      "location": "[resourceGroup().location]",
+      "dependsOn": [
+        "[resourceId('Microsoft.Network/publicIPAddresses/', variables('publicIPAddressName'))]"
+      ],
+      "properties": {
+        "ipConfigurations": [
+          {
+            "name": "ipconfig1",
+            "properties": {
+              "privateIPAllocationMethod": "Dynamic",
+              "publicIPAddress": {
+                "id": "[resourceId('Microsoft.Network/publicIPAddresses',variables('publicIPAddressName'))]"
+              },
+              "subnet": {
+                "id": "[variables('subnetRef')]"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "apiVersion": "2017-03-30",
+      "type": "Microsoft.Compute/virtualMachines",
+      "name": "[variables('vmName')]",
+      "location": "[resourceGroup().location]",
+      "dependsOn": [
+        "[resourceId('Microsoft.Storage/storageAccounts/', variables('storageAccountName'))]",
+        "[resourceId('Microsoft.Network/networkInterfaces/', variables('nicName'))]"
+      ],
+      "properties": {
+        "hardwareProfile": {
+          "vmSize": "Standard_A2"
+        },
+        "osProfile": {
+          "computerName": "[variables('vmName')]",
+          "adminUsername": "[parameters('adminUsername')]",
+          "adminPassword": "[parameters('adminPassword')]"
+        },
+        "storageProfile": {
+          "imageReference": {
+            "publisher": "MicrosoftWindowsServer",
+            "offer": "WindowsServer",
+            "sku": "2016-Datacenter",
+            "version": "latest"
+          },
+          "osDisk": {
+            "createOption": "FromImage"
+          },
+          "dataDisks": [
+            {
+              "diskSizeGB": 5,
+              "lun": 0,
+              "createOption": "Empty"
+            }
+          ]
+        },
+        "networkProfile": {
+          "networkInterfaces": [
+            {
+              "id": "[resourceId('Microsoft.Network/networkInterfaces',variables('nicName'))]"
+            }
+          ]
+        },
+        "diagnosticsProfile": {
+          "bootDiagnostics": {
+            "enabled": true,
+            "storageUri": "[reference(resourceId('Microsoft.Storage/storageAccounts/', variables('storageAccountName'))).primaryEndpoints.blob]"
+          }
+        }
+      }
+    },
+    {
+        "type": "Microsoft.Compute/virtualMachines/extensions",
+        "name": "[concat(variables('vmName'), '/', 'LogicMonitor-Collector')]",
+        "apiVersion": "2017-03-30",
+        "location": "[resourceGroup().location]",
+        "scale": null,
+        "properties": {
+            "publisher": "Microsoft.Compute",
+            "type": "CustomScriptExtension",
+            "typeHandlerVersion": "1.7",
+            "autoUpgradeMinorVersion": true,
+            "settings": {
+                "fileUris": [
+                  "[variables('scriptLocation')]"
+                ]
+            },
+            "protectedSettings": {
+                "commandToExecute": "[concat ('powershell -ExecutionPolicy Unrestricted -File ', variables('script'), ' ', variables('arguments'))]"  
+            }
+        },
+        "dependsOn": [
+          "[resourceId('Microsoft.Compute/virtualMachines', variables('vmName'))]"
+        ]
+    }
+  ],
+  "outputs": {
+    "hostname": {
+      "type": "string",
+      "value": "[reference(variables('publicIPAddressName')).dnsSettings.fqdn]"
+    }
+  }
+}
