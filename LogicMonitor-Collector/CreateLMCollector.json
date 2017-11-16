@@ -51,6 +51,8 @@
     },
     "ResourcePrefix": {
       "defaultValue": "lm",
+      "minLength": 2,
+      "maxLength": 4,
       "type": "string",
       "metadata": {
         "description": "Enter prefix to be used with all resources"
