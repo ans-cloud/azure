@@ -99,6 +99,31 @@
         }
     },
     {
+      "type": "Microsoft.Network/networkSecurityGroups",
+      "apiVersion": "2017-03-01",
+      "location": "[resourceGroup().location]",
+      "name": "[variables('networkSecurityGroup')]",
+      "tags": {},
+      "properties": {
+        "securityRules": [
+          {
+            "name": "Outbound any",
+            "properties": {
+              "description": "Outbound to any",
+              "protocol": "*",
+              "sourcePortRange": "*",
+              "destinationPortRange": "*",
+              "sourceAddressPrefix": "*",
+              "destinationAddressPrefix": "*",
+              "access": "Allow",
+              "priority": 100,
+              "direction": "Outbound"
+            }
+          }
+        ]
+      }
+    },
+    {
       "type": "Microsoft.Network/virtualNetworks",
       "name": "[variables('virtualNetworkName')]",
       "apiVersion": "2017-03-01",
@@ -116,28 +141,8 @@
             "properties": {
               "addressPrefix": "[parameters('subnetPrefix')]",
               "networkSecurityGroup": {
-                "location": "[resourceGroup().location]",
-                "name": "[variables('networkSecurityGroup')]",
-                "tags": {},
-                "properties": {
-                  "securityRules": [
-                    {
-                      "name": "Outbound any",
-                      "properties": {
-                        "description": "Outbound to any",
-                        "protocol": "*",
-                        "sourcePortRange": "*",
-                        "destinationPortRange": "*",
-                        "sourceAddressPrefix": "*",
-                        "destinationAddressPrefix": "*",
-                        "access": "Allow",
-                        "priority": "100",
-                        "direction": "Outbound"
-                      }
-                    }
-                  ]
+                "id": "[resourceId('Microsoft.Network/networkSecurityGroups', variables('networkSecurityGroup'))]"
                 }
-              }
             }
           }
         ]
