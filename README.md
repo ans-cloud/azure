@@ -1,1 +1,2 @@
-![Azure](/azure_logo.png) # Microsoft Azure 
+![Azure](/images/azure_logo.png) 
+# Microsoft Azure 
