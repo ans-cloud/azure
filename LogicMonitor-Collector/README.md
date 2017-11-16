@@ -6,3 +6,5 @@
 </a>
 
 This template creates an a Failover Pair of LogicMonitor collectors and registers them in the LogicMonitor Portal.
+
+![Diagram](/CreateLMCollector.png)
