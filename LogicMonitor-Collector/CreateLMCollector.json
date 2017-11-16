@@ -107,7 +107,7 @@
       "properties": {
         "securityRules": [
           {
-            "name": "Outbound any",
+            "name": "Outbound_Any",
             "properties": {
               "description": "Outbound to any",
               "protocol": "*",
