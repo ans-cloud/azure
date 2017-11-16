@@ -208,7 +208,7 @@
           "vmSize": "Standard_D1_v2"
         },
         "osProfile": {
-          "computerName": "[concat(parameters('ResourcePrefix'),'-lmcollector', copyIndex())]",
+          "computerName": "[concat(parameters('ResourcePrefix'),'_lmcollector', copyIndex())]",
           "adminUsername": "[parameters('adminUsername')]",
           "adminPassword": "[parameters('adminPassword')]"
         },
