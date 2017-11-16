@@ -14,12 +14,12 @@
         "description": "Password for the Virtual Machine."
       }
     },
-    "vmHostname": {
-        "defaultValue": "lm-collector",
-        "type": "string",
-        "metadata": {
-          "description": "VirtualMachine Hostmane."
-        }    
+    "Sostenuto_Id": {
+      "type": "string",
+      "defaultValue": "CUS0000",
+      "metadata": {
+        "description": "Customers Sostenuto Id."
+      }   
     },
     "lmAccessKey": {
         "type": "securestring",
@@ -41,13 +41,6 @@
           "description": "LogicMonitor Collector Size (Small 100 devices, Medium 500 devices, Large 750 devices)."
         }    
     },
-    "lmCollectorDesc": {
-        "defaultValue": "LM_Collector",
-        "type": "string",
-        "metadata": {
-          "description": "Collector Description."
-        }   
-    },
     "lmHost": {
         "defaultValue": "ans",
         "type": "string",
@@ -56,39 +49,104 @@
           "description": "LogicMonitor Environment"
         }    
     },
-    "vNetName": {
-      "defaultValue": "lm-test-vnet",
+    "ResourcePrefix": {
+      "defaultValue": "lm",
       "type": "string",
       "metadata": {
-        "description": "Enter existing vNet name"
-      }
+        "description": "Enter prefix to be used with all resources"
+      }      
     },
-    "SubnetName": {
-      "defaultValue": "lm-test-subnet",
+    "vnetPrefix": {
+      "defaultValue": "10.0.0.0/16",
       "type": "string",
       "metadata": {
-      "description": "Enter existing SubNet name"
-      }  
+        "description": "Enter Virtual Network address prefix"
+      }    
+    },
+    "subnetPrefix": {
+      "defaultValue": "10.0.0.0/24",
+      "type": "string",
+      "metadata": {
+        "description": "Enter Subnet address prefix"
+      }    
     }
   },
   "variables": {
-    "storageAccountName": "[concat(uniquestring(resourceGroup().id), 'salmvm')]",
-    "nicName": "lmVMNic",
-    "publicIPAddressName": "lmPublicIP",
-    "vmName": "[parameters('vmHostname')]",
-    "virtualNetworkName": "[parameters('vNetName')]",
+    "storageAccountName": "[concat(parameters('ResourcePrefix'),'-sa-',uniquestring(resourceGroup().id))]",
+    "availabilitySetName": "[concat(parameters('ResourcePrefix'),'-as')]",
+    "subnetName": "[concat(parameters('ResourcePrefix'),'-subnet')]",
+    "virtualNetworkName": "[concat(parameters('ResourcePrefix'),'-vnet')]",
     "virtualNetworkId": "[resourceId('Microsoft.Network/virtualNetworks', variables('virtualNetworkName'))]",
-    "subnetRef": "[concat(variables('virtualNetworkId'),'/subnets/', parameters('SubnetName'))]",
-    "singleQuote": "'",
+    "subnetRef": "[concat(variables('virtualNetworkId'),'/subnets/', variables('subnetName'))]",
+    "networkSecurityGroup": "[concat(parameters('ResourcePrefix'),'-nsg')]",
     "scriptLocation": "https://raw.githubusercontent.com/ans-cloud/azure/master/LogicMonitor-Collector/CreateLMCollector.ps1",
     "script": "CreateLMCollector.ps1",
-    "arguments": "[concat('-accessId ', parameters('lmAccessKey'),' -accessKey ', parameters('lmSecretKey'), ' -collectorSize ', parameters('lmCollectorSize'), ' -lmHost ', parameters('lmHost'), ' -lmDescription ', parameters('lmCollectorDesc'))]"
+    "arguments": "[concat('-accessId ', parameters('lmAccessKey'),' -accessKey ', parameters('lmSecretKey'), ' -collectorSize ', parameters('lmCollectorSize'), ' -lmHost ', parameters('lmHost'), ' -Sostenuto_Id ', parameters('Sostenuto_Id'))]"
   },
   "resources": [
     {
+      "type": "Microsoft.Compute/availabilitySets",
+      "name": "[variables('availabilitySetName')]",
+      "apiVersion": "2017-03-30",
+      "location": "[resourceGroup().location]",
+      "tags": {},
+      "sku": {
+        "name": "Aligned"
+      },
+	    "properties": {
+	      "platformFaultDomainCount": 2,
+	      "platformUpdateDomainCount": 2
+        }
+    },
+    {
+      "type": "Microsoft.Network/virtualNetworks",
+      "name": "[variables('virtualNetworkName')]",
+      "apiVersion": "2017-03-01",
+      "location": "[resourceGroup().location]",
+      "tags": {},
+      "properties": {
+        "addressSpace": {
+          "addressPrefixes": [
+            "[parameters('vnetPrefix')]"
+          ]
+        },
+        "subnets": [
+          {
+            "name": "[variables('subnetName')]",
+            "properties": {
+              "addressPrefix": "[parameters('subnetPrefix')]",
+              "networkSecurityGroup": {
+                "location": "[resourceGroup().location]",
+                "name": "[variables('networkSecurityGroup')]",
+                "tags": {},
+                "properties": {
+                  "securityRules": [
+                    {
+                      "name": "Outbound any",
+                      "properties": {
+                        "description": "Outbound to any",
+                        "protocol": "*",
+                        "sourcePortRange": "*",
+                        "destinationPortRange": "*",
+                        "sourceAddressPrefix": "*",
+                        "destinationAddressPrefix": "*",
+                        "access": "Allow",
+                        "priority": "100",
+                        "direction": "Outbound"
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
       "type": "Microsoft.Storage/storageAccounts",
       "name": "[variables('storageAccountName')]",
-      "apiVersion": "2016-01-01",
+      "apiVersion": "2017-06-01",
       "location": "[resourceGroup().location]",
       "sku": {
         "name": "Standard_LRS"
@@ -97,31 +155,23 @@
       "properties": {}
     },
     {
-      "apiVersion": "2016-03-30",
-      "type": "Microsoft.Network/publicIPAddresses",
-      "name": "[variables('publicIPAddressName')]",
-      "location": "[resourceGroup().location]",
-      "properties": {
-        "publicIPAllocationMethod": "Dynamic"
-      }
-    },
-    {
-      "apiVersion": "2016-03-30",
       "type": "Microsoft.Network/networkInterfaces",
-      "name": "[variables('nicName')]",
+      "name": "[concat(parameters('ResourcePrefix'),'nic', copyindex())]",
+      "apiVersion": "2017-03-01",
       "location": "[resourceGroup().location]",
+      "copy": {
+        "name": "nicLoop",
+        "count": 2
+      },
       "dependsOn": [
-        "[resourceId('Microsoft.Network/publicIPAddresses/', variables('publicIPAddressName'))]"
+        "[variables('virtualNetworkName')]"
       ],
       "properties": {
         "ipConfigurations": [
           {
-            "name": "ipconfig1",
+            "name": "[concat(parameters('ResourcePrefix'),'-ipconfig')]",
             "properties": {
               "privateIPAllocationMethod": "Dynamic",
-              "publicIPAddress": {
-                "id": "[resourceId('Microsoft.Network/publicIPAddresses',variables('publicIPAddressName'))]"
-              },
               "subnet": {
                 "id": "[variables('subnetRef')]"
               }
@@ -131,20 +181,26 @@
       }
     },
     {
-      "apiVersion": "2017-03-30",
       "type": "Microsoft.Compute/virtualMachines",
-      "name": "[variables('vmName')]",
+      "name": "[concat(parameters('ResourcePrefix'), '-lmcollector', copyIndex())]",
+      "apiVersion": "2017-03-30",
       "location": "[resourceGroup().location]",
+      "copy": {
+        "name": "virtualMachineLoop",
+        "count": 2
+      },
       "dependsOn": [
-        "[resourceId('Microsoft.Storage/storageAccounts/', variables('storageAccountName'))]",
-        "[resourceId('Microsoft.Network/networkInterfaces/', variables('nicName'))]"
+        "nicLoop"
       ],
       "properties": {
+        "availabilitySet": {
+          "id": "[resourceId('Microsoft.Compute/availabilitySets', variables('availabilitySetName'))]"
+        },
         "hardwareProfile": {
-          "vmSize": "Standard_A2"
+          "vmSize": "Standard_D1_v2"
         },
         "osProfile": {
-          "computerName": "[variables('vmName')]",
+          "computerName": "[concat(parameters('ResourcePrefix'),'-lmcollector', copyIndex())]",
           "adminUsername": "[parameters('adminUsername')]",
           "adminPassword": "[parameters('adminPassword')]"
         },
@@ -169,23 +225,21 @@
         "networkProfile": {
           "networkInterfaces": [
             {
-              "id": "[resourceId('Microsoft.Network/networkInterfaces',variables('nicName'))]"
+              "id": "[resourceId('Microsoft.Network/networkInterfaces',concat(parameters('ResourcePrefix'),'nic', copyindex()))]"
             }
           ]
-        },
-        "diagnosticsProfile": {
-          "bootDiagnostics": {
-            "enabled": true,
-            "storageUri": "[reference(resourceId('Microsoft.Storage/storageAccounts/', variables('storageAccountName'))).primaryEndpoints.blob]"
-          }
         }
       }
     },
     {
         "type": "Microsoft.Compute/virtualMachines/extensions",
-        "name": "[concat(variables('vmName'), '/', 'LogicMonitor-Collector')]",
+        "name": "[concat(parameters('ResourcePrefix'), '-lmcollector', copyIndex(), '/', 'LogicMonitor-Collector')]",
         "apiVersion": "2017-03-30",
         "location": "[resourceGroup().location]",
+        "copy": {
+          "name": "virtualMachineExtLoop",
+          "count": 2
+        },
         "scale": null,
         "properties": {
             "publisher": "Microsoft.Compute",
@@ -202,14 +256,8 @@
             }
         },
         "dependsOn": [
-          "[resourceId('Microsoft.Compute/virtualMachines', variables('vmName'))]"
+          "virtualMachineLoop"
         ]
     }
-  ],
-  "outputs": {
-    "hostname": {
-      "type": "string",
-      "value": "[reference(variables('publicIPAddressName')).dnsSettings.fqdn]"
-    }
-  }
+  ]
 }
