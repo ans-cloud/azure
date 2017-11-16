@@ -72,7 +72,7 @@
     }
   },
   "variables": {
-    "storageAccountName": "[concat(parameters('ResourcePrefix'),'-sa-',uniquestring(resourceGroup().id))]",
+    "storageAccountName": "[concat(parameters('ResourcePrefix'), uniquestring(resourceGroup().id))]",
     "availabilitySetName": "[concat(parameters('ResourcePrefix'),'-as')]",
     "subnetName": "[concat(parameters('ResourcePrefix'),'-subnet')]",
     "virtualNetworkName": "[concat(parameters('ResourcePrefix'),'-vnet')]",
