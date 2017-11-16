@@ -187,7 +187,7 @@
     },
     {
       "type": "Microsoft.Compute/virtualMachines",
-      "name": "[concat(parameters('ResourcePrefix'), '-lmcollector', copyIndex())]",
+      "name": "[concat(parameters('ResourcePrefix'), '-lm', copyIndex())]",
       "apiVersion": "2017-03-30",
       "location": "[resourceGroup().location]",
       "copy": {
