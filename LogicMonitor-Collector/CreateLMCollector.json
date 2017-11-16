@@ -164,7 +164,7 @@
     },
     {
       "type": "Microsoft.Network/networkInterfaces",
-      "name": "[concat(parameters('ResourcePrefix'),'nic', copyindex())]",
+      "name": "[concat(parameters('ResourcePrefix'),'-nic', copyindex())]",
       "apiVersion": "2017-03-01",
       "location": "[resourceGroup().location]",
       "copy": {
@@ -233,7 +233,7 @@
         "networkProfile": {
           "networkInterfaces": [
             {
-              "id": "[resourceId('Microsoft.Network/networkInterfaces',concat(parameters('ResourcePrefix'),'nic', copyindex()))]"
+              "id": "[resourceId('Microsoft.Network/networkInterfaces',concat(parameters('ResourcePrefix'),'-nic', copyindex()))]"
             }
           ]
         }
