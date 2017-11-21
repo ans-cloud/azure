@@ -71,6 +71,41 @@
       "metadata": {
         "description": "Enter Subnet address prefix"
       }    
+    },
+    "tagBusinessUnit": {
+      "defaultValue": "IT",
+      "type": "string",
+      "metadata": {
+        "description": "Enter business unit tag value"
+      }    
+    },
+    "tagCostCentre": {
+      "defaultValue": "IT",
+      "type": "string",
+      "metadata": {
+        "description": "Enter cost centre tag value"
+      }    
+    },
+    "tagOwner": {
+      "defaultValue": "Firstname Lastname",
+      "type": "string",
+      "metadata": {
+        "description": "Enter owners tage value"
+      }    
+    },
+    "tagEnvironment": {
+      "defaultValue": "Production",
+      "type": "string",
+      "metadata": {
+        "description": "Enter environment tag value"
+      }    
+    },
+    "tagApplicationRoles": {
+      "defaultValue": "Monitoring",
+      "type": "string",
+      "metadata": {
+        "description": "Enter application role tag value"
+      }    
     }
   },
   "variables": {
@@ -91,7 +126,13 @@
       "name": "[variables('availabilitySetName')]",
       "apiVersion": "2017-03-30",
       "location": "[resourceGroup().location]",
-      "tags": {},
+      "tags": {
+        "Business Unit": "[parameters('tagBusinessUnit')]",
+        "Cost Centre": "[parameters('tagCostCentre')]",
+        "Owner": "[parameters('tagOwner')]",
+        "Environment": "[parameters('tagEnvironment')]",
+        "Application Roles": "[parameters('tagApplicationRoles')]"
+      },
       "sku": {
         "name": "Aligned"
       },
@@ -105,7 +146,13 @@
       "apiVersion": "2017-03-01",
       "location": "[resourceGroup().location]",
       "name": "[variables('networkSecurityGroup')]",
-      "tags": {},
+      "tags": {
+        "Business Unit": "[parameters('tagBusinessUnit')]",
+        "Cost Centre": "[parameters('tagCostCentre')]",
+        "Owner": "[parameters('tagOwner')]",
+        "Environment": "[parameters('tagEnvironment')]",
+        "Application Roles": "[parameters('tagApplicationRoles')]"
+      },
       "properties": {
         "securityRules": [
           {
@@ -130,7 +177,13 @@
       "name": "[variables('virtualNetworkName')]",
       "apiVersion": "2017-03-01",
       "location": "[resourceGroup().location]",
-      "tags": {},
+      "tags": {
+        "Business Unit": "[parameters('tagBusinessUnit')]",
+        "Cost Centre": "[parameters('tagCostCentre')]",
+        "Owner": "[parameters('tagOwner')]",
+        "Environment": "[parameters('tagEnvironment')]",
+        "Application Roles": "[parameters('tagApplicationRoles')]"
+      },
       "dependsOn": [
         "[concat('Microsoft.Network/networkSecurityGroups/', variables('networkSecurityGroup'))]"
       ],
@@ -161,6 +214,13 @@
       "sku": {
         "name": "Standard_LRS"
       },
+      "tags": {
+        "Business Unit": "[parameters('tagBusinessUnit')]",
+        "Cost Centre": "[parameters('tagCostCentre')]",
+        "Owner": "[parameters('tagOwner')]",
+        "Environment": "[parameters('tagEnvironment')]",
+        "Application Roles": "[parameters('tagApplicationRoles')]"
+      },
       "kind": "Storage",
       "properties": {}
     },
@@ -169,6 +229,13 @@
       "name": "[concat(parameters('ResourcePrefix'),'-nic', copyindex())]",
       "apiVersion": "2017-03-01",
       "location": "[resourceGroup().location]",
+      "tags": {
+        "Business Unit": "[parameters('tagBusinessUnit')]",
+        "Cost Centre": "[parameters('tagCostCentre')]",
+        "Owner": "[parameters('tagOwner')]",
+        "Environment": "[parameters('tagEnvironment')]",
+        "Application Roles": "[parameters('tagApplicationRoles')]"
+      },
       "copy": {
         "name": "nicLoop",
         "count": 2
@@ -195,6 +262,13 @@
       "name": "[concat(parameters('ResourcePrefix'), '-vm', copyIndex())]",
       "apiVersion": "2017-03-30",
       "location": "[resourceGroup().location]",
+      "tags": {
+        "Business Unit": "[parameters('tagBusinessUnit')]",
+        "Cost Centre": "[parameters('tagCostCentre')]",
+        "Owner": "[parameters('tagOwner')]",
+        "Environment": "[parameters('tagEnvironment')]",
+        "Application Roles": "[parameters('tagApplicationRoles')]"
+      },
       "copy": {
         "name": "virtualMachineLoop",
         "count": 2
