@@ -197,6 +197,9 @@
       "name": "[concat(parameters('ResourcePrefix'),'-nic', copyindex())]",
       "apiVersion": "2017-03-01",
       "location": "[resourceGroup().location]",
+      "dependsOn": [
+        "[concat('Microsoft.Network/networkSecurityGroups/', variables('networkSecurityGroup'))]"
+      ],
       "tags": {
         "Business Unit": "[parameters('tagBusinessUnit')]",
         "Cost Centre": "[parameters('tagCostCentre')]",
