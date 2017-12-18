@@ -116,7 +116,7 @@
     "virtualNetworkId": "[resourceId('Microsoft.Network/virtualNetworks', variables('virtualNetworkName'))]",
     "subnetRef": "[concat(variables('virtualNetworkId'),'/subnets/', variables('subnetName'))]",
     "networkSecurityGroup": "[concat(parameters('ResourcePrefix'),'-nsg')]",
-    "scriptLocation": "https://raw.githubusercontent.com/ans-cloud/azure/master/LogicMonitor-Collector/CreateLMCollector.ps1",
+    "scriptLocation": "https://raw.githubusercontent.com/ans-cloud/azure/master/LogicMonitor-Collector-New-Network/CreateLMCollector.ps1",
     "script": "CreateLMCollector.ps1",
     "arguments": "[concat('-accessId ', parameters('lmAccessKey'),' -accessKey ', parameters('lmSecretKey'), ' -collectorSize ', parameters('lmCollectorSize'), ' -lmHost ', parameters('lmHost'), ' -Sostenuto_Id ', parameters('Sostenuto_Id'))]"
   },
