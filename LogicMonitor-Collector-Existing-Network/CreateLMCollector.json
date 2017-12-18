@@ -58,18 +58,22 @@
         "description": "Enter prefix to be used with all resources"
       }      
     },
-    "vnetPrefix": {
-      "defaultValue": "10.0.0.0/16",
+    "existingVnetResourceGroupName": {
       "type": "string",
       "metadata": {
-        "description": "Enter Virtual Network address prefix"
+        "description": "Name of the Resource Group for the existing Virtual Network."
+      }
+    },
+    "existingVnetName": {
+      "type": "string",
+      "metadata": {
+        "description": "Enter Existing Virtual Network Name"
       }    
     },
-    "subnetPrefix": {
-      "defaultValue": "10.0.0.0/24",
+    "existingSubnetName": {
       "type": "string",
       "metadata": {
-        "description": "Enter Subnet address prefix"
+        "description": "Enter Existing Subnet Name"
       }    
     },
     "tagBusinessUnit": {
@@ -90,7 +94,7 @@
       "defaultValue": "Firstname Lastname",
       "type": "string",
       "metadata": {
-        "description": "Enter owners tage value"
+        "description": "Enter owners tag value"
       }    
     },
     "tagEnvironment": {
@@ -111,10 +115,8 @@
   "variables": {
     "storageAccountName": "[concat(parameters('ResourcePrefix'), uniquestring(resourceGroup().id))]",
     "availabilitySetName": "[concat(parameters('ResourcePrefix'),'-as')]",
-    "subnetName": "[concat(parameters('ResourcePrefix'),'-subnet')]",
-    "virtualNetworkName": "[concat(parameters('ResourcePrefix'),'-vnet')]",
-    "virtualNetworkId": "[resourceId('Microsoft.Network/virtualNetworks', variables('virtualNetworkName'))]",
-    "subnetRef": "[concat(variables('virtualNetworkId'),'/subnets/', variables('subnetName'))]",
+    "virtualNetworkId": "[resourceId(parameters('existingVnetResourceGroupName'), 'Microsoft.Network/virtualNetworks', parameters('existingVnetName'))]",
+    "subnetRef": "[concat(variables('virtualNetworkId'),'/subnets/', parameters('existingSubnetName'))]",
     "networkSecurityGroup": "[concat(parameters('ResourcePrefix'),'-nsg')]",
     "scriptLocation": "https://raw.githubusercontent.com/ans-cloud/azure/master/LogicMonitor-Collector/CreateLMCollector.ps1",
     "script": "CreateLMCollector.ps1",
@@ -173,40 +175,6 @@
       }
     },
     {
-      "type": "Microsoft.Network/virtualNetworks",
-      "name": "[variables('virtualNetworkName')]",
-      "apiVersion": "2017-03-01",
-      "location": "[resourceGroup().location]",
-      "tags": {
-        "Business Unit": "[parameters('tagBusinessUnit')]",
-        "Cost Centre": "[parameters('tagCostCentre')]",
-        "Owner": "[parameters('tagOwner')]",
-        "Environment": "[parameters('tagEnvironment')]",
-        "Application Roles": "[parameters('tagApplicationRoles')]"
-      },
-      "dependsOn": [
-        "[concat('Microsoft.Network/networkSecurityGroups/', variables('networkSecurityGroup'))]"
-      ],
-      "properties": {
-        "addressSpace": {
-          "addressPrefixes": [
-            "[parameters('vnetPrefix')]"
-          ]
-        },
-        "subnets": [
-          {
-            "name": "[variables('subnetName')]",
-            "properties": {
-              "addressPrefix": "[parameters('subnetPrefix')]",
-              "networkSecurityGroup": {
-                "id": "[resourceId('Microsoft.Network/networkSecurityGroups', variables('networkSecurityGroup'))]"
-                }
-            }
-          }
-        ]
-      }
-    },
-    {
       "type": "Microsoft.Storage/storageAccounts",
       "name": "[variables('storageAccountName')]",
       "apiVersion": "2017-06-01",
@@ -241,13 +209,16 @@
         "count": 2
       },
       "dependsOn": [
-        "[variables('virtualNetworkName')]"
+        "[parameters('existingVnetName')]"
       ],
       "properties": {
         "ipConfigurations": [
           {
             "name": "[concat(parameters('ResourcePrefix'),'-ipconfig')]",
             "properties": {
+              "networkSecurityGroup": {
+                "id": "[resourceId('Microsoft.Network/networkSecurityGroups', variables('networkSecurityGroup'))]"
+              },
               "privateIPAllocationMethod": "Dynamic",
               "subnet": {
                 "id": "[variables('subnetRef')]"

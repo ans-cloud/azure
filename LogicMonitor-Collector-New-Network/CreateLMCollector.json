@@ -90,7 +90,7 @@
       "defaultValue": "Firstname Lastname",
       "type": "string",
       "metadata": {
-        "description": "Enter owners tage value"
+        "description": "Enter owners tag value"
       }    
     },
     "tagEnvironment": {
