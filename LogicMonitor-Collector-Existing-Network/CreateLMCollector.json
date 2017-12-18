@@ -212,13 +212,13 @@
         "count": 2
       },
       "properties": {
+        "networkSecurityGroup": {
+          "id": "[resourceId('Microsoft.Network/networkSecurityGroups', variables('networkSecurityGroup'))]"
+        },
         "ipConfigurations": [
           {
             "name": "[concat(parameters('ResourcePrefix'),'-ipconfig')]",
             "properties": {
-              "networkSecurityGroup": {
-                "id": "[resourceId('Microsoft.Network/networkSecurityGroups', variables('networkSecurityGroup'))]"
-              },
               "privateIPAllocationMethod": "Dynamic",
               "subnet": {
                 "id": "[variables('subnetRef')]"
