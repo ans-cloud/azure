@@ -208,9 +208,6 @@
         "name": "nicLoop",
         "count": 2
       },
-      "dependsOn": [
-        "[parameters('existingVnetName')]"
-      ],
       "properties": {
         "ipConfigurations": [
           {
