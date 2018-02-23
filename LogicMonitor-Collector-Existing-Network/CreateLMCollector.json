@@ -120,7 +120,9 @@
     "networkSecurityGroup": "[concat(parameters('ResourcePrefix'),'-nsg')]",
     "scriptLocation": "https://raw.githubusercontent.com/ans-cloud/azure/master/LogicMonitor-Collector-Existing-Network/CreateLMCollector.ps1",
     "script": "CreateLMCollector.ps1",
-    "arguments": "[concat('-accessId ', parameters('lmAccessKey'),' -accessKey ', parameters('lmSecretKey'), ' -collectorSize ', parameters('lmCollectorSize'), ' -lmHost ', parameters('lmHost'), ' -Sostenuto_Id ', parameters('Sostenuto_Id'))]"
+    "quote": "'",
+    "arguments": "[concat('-accessId ', variables('quote'), parameters('lmAccessKey'), variables('quote'), ' -accessKey ', variables('quote'), parameters('lmSecretKey'), variables('quote'),' -collectorSize ', parameters('lmCollectorSize'), ' -lmHost ', parameters('lmHost'), ' -Sostenuto_Id ', parameters('Sostenuto_Id'))]"
+    
   },
   "resources": [
     {
